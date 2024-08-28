@@ -4,12 +4,10 @@
 # GitHub
 #    https://github.com/Korchy/1d_obj_tools
 
-import bmesh
-import bpy
 from bpy.props import FloatProperty, StringProperty
 from bpy.types import Operator, Panel, Scene
 from bpy.utils import register_class, unregister_class
-import itertools
+import fileinput
 
 bl_info = {
     "name": "OBJ Tools",
@@ -31,69 +29,20 @@ class OBJTools:
     dest_postfix = '_s'
 
     @classmethod
-    def shift(cls, context, shift_x, shift_y, shift_z):
+    def shift(cls, context, op, obj_file_path, shift_x, shift_y, shift_z):
         # shift all vertices in OBJ by X,Y,Z coordinates
-        src_obj = context.active_object
-        # # current mode
-        # mode = src_obj.mode
-        # # switch to OBJECT mode
-        # if src_obj.mode == 'EDIT':
-        #     bpy.ops.object.mode_set(mode='OBJECT')
-        # # switch to "edge selection" mode
-        # context.tool_settings.mesh_select_mode = (False, True, False)
-        # # process object
-        # # get data from source mesh
-        # bm = bmesh.new()
-        # bm.from_mesh(src_obj.data)
-        # bm.edges.ensure_lookup_table()
-        # # process edges
-        # if similar:
-        #     # all combinations of materials
-        #     # Pavel Kotelevec - enable working with sama mats on both linked faces. In testing (may work not proper).
-        #     # mat_pairs = [set(face.material_index for face in edge.link_faces) for edge in bm.edges if edge.select
-        #     #              and len(set(face.material_index for face in edge.link_faces)) > 1]
-        #     mat_pairs = [set(face.material_index for face in edge.link_faces) for edge in bm.edges if edge.select]
-        #     # get all materials id list
-        #     mat_ids = set(itertools.chain(*mat_pairs))
-        #     # deselect all edges
-        #     cls._deselect_all(bm=bm)
-        #     # select edges that have two materials from this list on linked faces
-        #     for edge in bm.edges:
-        #         edge_mats = set(face.material_index for face in edge.link_faces)
-        #         # if len(edge_mats) > 1:
-        #         #     if all(item in mat_ids for item in edge_mats):
-        #         #         edge.select = True
-        #         if all(item in mat_ids for item in edge_mats):
-        #             edge.select = True
-        # else:
-        #     # only pairs of materials
-        #     # get pairs of material on edge faces (for selected edges)
-        #     mat_pairs = set(
-        #         [frozenset(face.material_index for face in edge.link_faces) for edge in bm.edges if edge.select]
-        #     )
-        #     # mat_pairs = set(pair for pair in mat_pairs if len(pair) == 2)   # filter same material edges
-        #     # deselect all edges
-        #     cls._deselect_all(bm=bm)
-        #     # select edges with same materials on linked faces
-        #     for edge in bm.edges:
-        #         if set(face.material_index for face in edge.link_faces) in mat_pairs:
-        #             edge.select = True
-        # # save changed data to mesh
-        # bm.to_mesh(src_obj.data)
-        # bm.free()
-        # # return mode back
-        # context.scene.objects.active = src_obj
-        # bpy.ops.object.mode_set(mode=mode)
+        counter = 0
+        with fileinput.FileInput(obj_file_path) as file:
+            for line in file:
+                if line.startswith('v '):
+                    counter += 1
+                    print(line)
 
-    # @staticmethod
-    # def _deselect_all(bm):
-    #     # remove all selection from edges and vertices in bmesh
-    #     for face in bm.faces:
-    #         face.select = False
-    #     for edge in bm.edges:
-    #         edge.select = False
-    #     for vertex in bm.verts:
-    #         vertex.select = False
+        # show message on finish
+        op.report(
+            type={'INFO'},
+            message='OBJ shifted, processed ' + str(counter) + ' lines.'
+        )
 
     @staticmethod
     def ui(layout, context):
@@ -134,6 +83,8 @@ class OBJTools_OT_shift(Operator):
     def execute(self, context):
         OBJTools.shift(
             context=context,
+            op=self,
+            obj_file_path=context.scene.objtools_pref_obj_file_path,
             shift_x=context.scene.objtools_pref_shift_x,
             shift_y=context.scene.objtools_pref_shift_y,
             shift_z=context.scene.objtools_pref_shift_z
