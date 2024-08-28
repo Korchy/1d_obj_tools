@@ -10,6 +10,8 @@ Some tools for working with OBJ files.
 
 Shifts all vertices by X,Y,Z coordinates on specified value.
 
+Creates modified OBJ file with "_s" postfix in the name in the same directory.
+
 Blender version
 -
 2.79
