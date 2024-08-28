@@ -3,11 +3,11 @@
 #
 # GitHub
 #    https://github.com/Korchy/1d_obj_tools
-
+import bpy.path
 from bpy.props import FloatProperty, StringProperty
 from bpy.types import Operator, Panel, Scene
 from bpy.utils import register_class, unregister_class
-import fileinput
+import os
 
 bl_info = {
     "name": "OBJ Tools",
@@ -26,23 +26,38 @@ bl_info = {
 
 class OBJTools:
 
-    dest_postfix = '_s'
+    _dest_postfix = '_s'
 
     @classmethod
     def shift(cls, context, op, obj_file_path, shift_x, shift_y, shift_z):
         # shift all vertices in OBJ by X,Y,Z coordinates
-        counter = 0
-        with fileinput.FileInput(obj_file_path) as file:
-            for line in file:
-                if line.startswith('v '):
-                    counter += 1
-                    print(line)
-
-        # show message on finish
-        op.report(
-            type={'INFO'},
-            message='OBJ shifted, processed ' + str(counter) + ' lines.'
-        )
+        obj_file_path = bpy.path.abspath(obj_file_path)
+        dest_obj_file_path = os.path.splitext(obj_file_path)[0] + cls._dest_postfix + '.obj'
+        lines_processed = 0
+        try:
+            # read from src file, process, write to dest file
+            with open(obj_file_path, mode='r') as src_file, open(dest_obj_file_path, mode='w') as dest_file:
+                for line in src_file:
+                    # process lines with vertices data, starts with 'v'
+                    if line.startswith('v '):
+                        # v 432850.639333 3823543.650699 407.624746 0.431373 0.356863 0.270588
+                        data = line.split()
+                        data[1] = str(float(data[1]) + shift_x)
+                        data[2] = str(float(data[2]) + shift_y)
+                        data[3] = str(float(data[3]) + shift_z)
+                        line = ' '.join(data) + '\n'
+                        lines_processed += 1
+                    dest_file.write(line)
+            # show message on finish
+            op.report(
+                type={'INFO'},
+                message='OBJ shifted, processed ' + str(lines_processed) + ' lines.'
+            )
+        except IOError as e:
+            op.report(
+                type={'INFO'},
+                message='Permission denied'
+            )
 
     @staticmethod
     def ui(layout, context):
@@ -113,7 +128,7 @@ def register(ui=True):
     Scene.objtools_pref_obj_file_path = StringProperty(
         name='OBJ File Path',
         subtype='FILE_PATH',
-        default='i:/dev/blender/_zakaz/PavelKotelevec/obj_tools/_all/Тетрапилон_0_4.obj'    # TODO: remove later
+        # default='i:/dev/blender/_zakaz/PavelKotelevec/obj_tools/_all/Тетрапилон_0_4.obj'    # TODO: remove later
     )
     Scene.objtools_pref_shift_x = FloatProperty(
         name='Shift X',
