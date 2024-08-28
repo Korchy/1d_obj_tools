@@ -3,6 +3,7 @@
 #
 # GitHub
 #    https://github.com/Korchy/1d_obj_tools
+
 import bpy.path
 from bpy.props import FloatProperty, StringProperty
 from bpy.types import Operator, Panel, Scene
@@ -127,8 +128,7 @@ class OBJTools_PT_panel(Panel):
 def register(ui=True):
     Scene.objtools_pref_obj_file_path = StringProperty(
         name='OBJ File Path',
-        subtype='FILE_PATH',
-        # default='i:/dev/blender/_zakaz/PavelKotelevec/obj_tools/_all/Тетрапилон_0_4.obj'    # TODO: remove later
+        subtype='FILE_PATH'
     )
     Scene.objtools_pref_shift_x = FloatProperty(
         name='Shift X',
